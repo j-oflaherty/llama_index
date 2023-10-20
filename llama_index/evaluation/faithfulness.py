@@ -71,6 +71,8 @@ class FaithfulnessEvaluator(BaseEvaluator):
             The template to use for evaluation.
         refine_template(Optional[Union[str, BasePromptTemplate]]):
             The template to use for refining the evaluation.
+        refine_template(str):
+            String to search in the answer to determine passing.
     """
 
     def __init__(
@@ -79,6 +81,7 @@ class FaithfulnessEvaluator(BaseEvaluator):
         raise_error: bool = False,
         eval_template: str | BasePromptTemplate | None = None,
         refine_template: str | BasePromptTemplate | None = None,
+        passing_str: str = "yes",
     ) -> None:
         """Init params."""
         self._service_context = service_context or ServiceContext.from_defaults()
@@ -95,6 +98,8 @@ class FaithfulnessEvaluator(BaseEvaluator):
             self._refine_template = PromptTemplate(refine_template)
         else:
             self._refine_template = refine_template or DEFAULT_REFINE_TEMPLATE
+
+        self.passing_str = passing_str.lower()
 
     async def aevaluate(
         self,
@@ -120,7 +125,7 @@ class FaithfulnessEvaluator(BaseEvaluator):
 
         raw_response_txt = str(response_obj)
 
-        if "yes" in raw_response_txt.lower():
+        if self.passing_str in raw_response_txt.lower():
             passing = True
         else:
             passing = False
